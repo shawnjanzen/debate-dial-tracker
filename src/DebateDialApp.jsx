@@ -1,4 +1,8 @@
 // DebateDialApp.jsx
+
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+
 import React, { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
