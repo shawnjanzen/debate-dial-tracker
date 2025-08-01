@@ -3,97 +3,95 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
 
-import React, { useState, useEffect } from "react";
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  LineElement,
-  PointElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import React, { useState, useEffect, useRef } from "react";
+import { RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 
-ChartJS.register(LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend);
+const App = () => {
+  const [value, setValue] = useState(0);
+  const timerRef = useRef(null);
 
-const getTimestamp = () => new Date().toLocaleTimeString();
+  const data = [
+    {
+      name: "Dial",
+      value: value,
+      fill: "#8884d8",
+    },
+  ];
 
-const DebateDialApp = () => {
-  const [value, setValue] = useState(50);
-  const [dataPoints, setDataPoints] = useState([]);
-  const [userActivity, setUserActivity] = useState({});
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDataPoints((prev) => [
-        ...prev,
-        { time: getTimestamp(), value },
-      ]);
-
-      setUserActivity((prev) => {
-        const id = localStorage.getItem("debateUserId");
-        return { ...prev, [id]: true };
+  const handleStart = () => {
+    if (timerRef.current) return; // prevent multiple timers
+    timerRef.current = setInterval(() => {
+      setValue((prev) => {
+        if (prev >= 10) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          return 10;
+        }
+        return prev + 1;
       });
-    }, 3000); // record every 3 seconds
+    }, 1000);
+  };
 
-    return () => clearInterval(interval);
-  }, [value]);
+  const handleStop = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleReset = () => {
+    handleStop();
+    setValue(0);
+  };
 
   useEffect(() => {
-    if (!localStorage.getItem("debateUserId")) {
-      localStorage.setItem("debateUserId", Math.random().toString(36).substr(2, 9));
-    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
   }, []);
 
-  const resetSession = () => {
-    setDataPoints([]);
-    setUserActivity({});
-  };
-
-  const chartData = {
-    labels: dataPoints.map((d) => d.time),
-    datasets: [
-      {
-        label: "Audience Sentiment (0 = Against, 100 = For)",
-        data: dataPoints.map((d) => d.value),
-        fill: false,
-        borderColor: "#3b82f6",
-        tension: 0.1,
-      },
-    ],
-  };
-
   return (
-    <div className="p-6 max-w-3xl mx-auto text-center">
-      <h1 className="text-2xl font-bold mb-4">Live Debate Dial Tracker</h1>
-      <p className="mb-4">
-        Move the slider to indicate your current support level. 0 = Strongly Against,
-        100 = Strongly For.
-      </p>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
-        className="w-full mb-4"
-      />
-      <p className="mb-4">Your current position: <strong>{value}</strong></p>
-      <div className="mb-4">
-        <Line data={chartData} />
-      </div>
-      <button
-        onClick={resetSession}
-        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+    <div style={{ textAlign: "center", padding: "2rem" }}>
+      <h2>Debate Dial (0–10)</h2>
+      <RadialBarChart
+        width={400}
+        height={400}
+        cx="50%"
+        cy="50%"
+        innerRadius="30%"
+        outerRadius="100%"
+        barSize={150}  // Thick line for visibility
+        data={data}
+        startAngle={180}
+        endAngle={0}
       >
-        Reset Debate Session
-      </button>
-      <p className="mt-4 text-sm text-gray-500">
-        Active participants: {Object.keys(userActivity).length}
-      </p>
+        <PolarAngleAxis
+          type="number"
+          domain={[0, 10]}
+          angleAxisId={0}
+          tick={false}
+        />
+        <RadialBar
+          background
+          clockWise
+          dataKey="value"
+          cornerRadius={10}
+        />
+      </RadialBarChart>
+      <p style={{ fontSize: "2rem" }}>Current Value: {value}</p>
+      <div style={{ marginTop: "1.5rem" }}>
+        <button onClick={handleStart} style={{ marginRight: "1rem" }}>
+          Start
+        </button>
+        <button onClick={handleStop} style={{ marginRight: "1rem" }}>
+          Stop
+        </button>
+        <button onClick={handleReset}>Reset</button>
+      </div>
     </div>
   );
 };
 
-export default DebateDialApp;
+export default App;
