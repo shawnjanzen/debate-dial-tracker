@@ -1,7 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import DebateDialApp from './DebateDialApp';
-import "./index.css";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css"; // global styles
+import DebateDialApp from "./DebateDialApp";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<DebateDialApp />);
+root.render(
+  <React.StrictMode>
+    <DebateDialApp />
+  </React.StrictMode>
+);
